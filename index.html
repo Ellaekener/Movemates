@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <title>Rullstolsanpassad Göteborgskarta</title>
+
+    <!-- Lägg till Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+    <style>
+        /* Gör så att kartan syns ordentligt */
+        #map {
+            height: 100vh; /* 100% av skärmen */
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Här kommer kartan att visas -->
+<div id="map"></div>
+
+<!-- Lägg till Leaflet JS -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+// Skapa en Leaflet-karta centrerad på Göteborg
+var map = L.map('map').setView([57.7089, 11.9746], 13);
+
+// Lägg till bakgrundskarta från OpenStreetMap
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap-bidragsgivare'
+}).addTo(map);
+
+// Hämta vägar från Overpass API
+var overpassUrl = 'https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(way["surface"="cobblestone"](57.65,11.8,57.8,12.05);way["surface"="asphalt"](57.65,11.8,57.8,12.05););out body;>;out skel qt;';
+
+// Hämta GeoJSON-data från Overpass
+fetch(overpassUrl)
+  .then(response => response.json())
+  .then(data => {
+    var geojson = osmtogeojson(data); // Konvertera till GeoJSON-format
+
+    // Lägg till vägarna på kartan
+    L.geoJSON(geojson, {
+      style: function(feature) {
+        if (feature.properties.tags.surface === 'cobblestone') {
+          return { color: 'red' }; // Röd färg för kullersten
+        } else if (feature.properties.tags.surface === 'asphalt') {
+          return { color: 'green' }; // Grön färg för asfalt
+        }
+      }
+    }).addTo(map);
+  })
+  .catch(err => console.error(err));
+
+// Hjälpfunktion: osmtogeojson
+// Ladda in denna fil från CDN:
+</script>
+
+<!-- Osmtogeojson bibliotek -->
+<script src="https://cdn.jsdelivr.net/npm/osmtogeojson@3.0.0/osmtogeojson.min.js"></script>
+
+</body>
+</html>
